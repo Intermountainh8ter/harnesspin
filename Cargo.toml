@@ -1,0 +1,24 @@
+[package]
+name = "harnesspin"
+version = "0.0.1"
+edition = "2021"
+license = "MIT"
+description = "Pre-registered eval-harness run manifest: pin the harness commit, task config, model, chat template, sampling, and metrics; emit a canonical hash and a divergence verdict so a leaderboard row that looks like the paper actually matches the paper."
+repository = "https://github.com/Intermountainh8ter/harnesspin"
+keywords = ["llm", "eval", "harness", "reproducibility", "manifest"]
+categories = ["command-line-utilities", "science"]
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+sha2 = "0.10"
+
+[[bin]]
+name = "harnesspin"
+path = "src/main.rs"
+
+[lib]
+name = "harnesspin"
+path = "src/lib.rs"
