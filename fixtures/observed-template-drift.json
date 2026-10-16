@@ -1,0 +1,9 @@
+{
+  "harness": {"name": "lm-evaluation-harness", "commit_sha": "fe60f7f0e76f123c0f32a2317f72e4f8d8f78aef"},
+  "task": {"name": "mmlu", "config_sha256_hex": "0101010101010101010101010101010101010101010101010101010101010101"},
+  "model": {"id": "demo-org/demo-model", "revision": "r1"},
+  "chat_template_sha256_hex": "9999999999999999999999999999999999999999999999999999999999999999",
+  "sampling": {"temperature": 0.0, "top_p": 1.0, "top_k": 0, "max_tokens": 128, "seed": 1},
+  "few_shot": {"n_shots": 5, "examples_sha256_hex": "0303030303030303030303030303030303030303030303030303030303030303"},
+  "metrics": ["acc", "acc_norm"]
+}
