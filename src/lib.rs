@@ -280,6 +280,219 @@ pub fn verify(declared: &RunManifest, observed: &RunManifest) -> Verdict {
     }
 }
 
+/// Name of the pinned field a divergence reports.
+pub fn divergence_field(d: &Divergence) -> &'static str {
+    match d {
+        Divergence::Harness { .. } => "harness",
+        Divergence::Task { .. } => "task",
+        Divergence::Model { .. } => "model",
+        Divergence::ChatTemplate { .. } => "chat_template",
+        Divergence::Sampling { .. } => "sampling",
+        Divergence::FewShot { .. } => "few_shot",
+        Divergence::Metrics { .. } => "metrics",
+    }
+}
+
+/// The seven pinned fields, in `compare` order.
+pub const PINNED_FIELDS: [&str; 7] = [
+    "harness",
+    "task",
+    "model",
+    "chat_template",
+    "sampling",
+    "few_shot",
+    "metrics",
+];
+
+/// Seeded single-field mutation study (model-free).
+pub mod mutate {
+    use super::*;
+    use serde_json::{json, Value};
+
+    /// splitmix64: small seeded generator, no new dependency.
+    pub struct Rng(pub u64);
+    impl Rng {
+        pub fn next(&mut self) -> u64 {
+            self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
+            let mut z = self.0;
+            z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+            z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+            z ^ (z >> 31)
+        }
+        pub fn below(&mut self, n: u64) -> u64 {
+            self.next() % n
+        }
+    }
+
+    fn hex(r: &mut Rng) -> String {
+        (0..4).map(|_| format!("{:016x}", r.next())).collect()
+    }
+
+    /// Reference manifest, drawn from the seed.
+    pub fn reference(r: &mut Rng) -> RunManifest {
+        RunManifest {
+            harness: Harness { name: "ref-harness".into(), commit_sha: hex(r)[..40].into() },
+            task: TaskConfig { name: "ref-task".into(), config_sha256_hex: hex(r) },
+            model: Model { id: "ref-org/ref-model".into(), revision: hex(r)[..12].into() },
+            chat_template_sha256_hex: hex(r),
+            sampling: Sampling { temperature: 0.0, top_p: 1.0, top_k: 0, max_tokens: 128, seed: r.below(1000) },
+            few_shot: FewShot { n_shots: 5, examples_sha256_hex: hex(r) },
+            metrics: vec!["acc".into(), "acc_norm".into()],
+        }
+    }
+
+    /// Change one field to a different, non-blank value.
+    pub fn mutate_field(m: &RunManifest, field: &str, r: &mut Rng) -> RunManifest {
+        let mut x = m.clone();
+        match field {
+            "harness" => {
+                if r.below(2) == 0 { x.harness.name = format!("h-{}", hex(r)[..8].to_string()); }
+                else { x.harness.commit_sha = hex(r)[..40].into(); }
+            }
+            "task" => {
+                if r.below(2) == 0 { x.task.name = format!("t-{}", &hex(r)[..8]); }
+                else { x.task.config_sha256_hex = hex(r); }
+            }
+            "model" => {
+                if r.below(2) == 0 { x.model.id = format!("o/m-{}", &hex(r)[..8]); }
+                else { x.model.revision = hex(r)[..12].into(); }
+            }
+            "chat_template" => x.chat_template_sha256_hex = hex(r),
+            "sampling" => match r.below(5) {
+                0 => x.sampling.temperature += 0.25 * (1 + r.below(4)) as f64,
+                1 => x.sampling.top_p -= 0.05 * (1 + r.below(4)) as f64,
+                2 => x.sampling.top_k += 1 + r.below(100) as u32,
+                3 => x.sampling.max_tokens += 1 + r.below(1000) as u32,
+                _ => x.sampling.seed += 1 + r.below(1000),
+            },
+            "few_shot" => {
+                if r.below(2) == 0 { x.few_shot.n_shots += 1 + r.below(10) as u32; }
+                else { x.few_shot.examples_sha256_hex = hex(r); }
+            }
+            "metrics" => match r.below(3) {
+                0 => x.metrics.push(format!("m-{}", &hex(r)[..6])),
+                1 => x.metrics.reverse(),
+                _ => x.metrics[0] = format!("m-{}", &hex(r)[..6]),
+            },
+            _ => unreachable!("unknown field"),
+        }
+        x
+    }
+
+    /// Blank one blank-checked sub-field of `field`.
+    pub fn blank_field(m: &RunManifest, field: &str, r: &mut Rng) -> RunManifest {
+        let mut x = m.clone();
+        match field {
+            "harness" => x.harness.commit_sha = if r.below(2) == 0 { "".into() } else { "  ".into() },
+            "task" => x.task.config_sha256_hex = String::new(),
+            "model" => if r.below(2) == 0 { x.model.id.clear() } else { x.model.revision.clear() },
+            "chat_template" => x.chat_template_sha256_hex = String::new(),
+            "few_shot" => x.few_shot.examples_sha256_hex = String::new(),
+            "metrics" => x.metrics.clear(),
+            _ => unreachable!("sampling is not blank-checked"),
+        }
+        x
+    }
+
+    fn emit_shuffled(v: &Value, r: &mut Rng, out: &mut String) {
+        let ws = |r: &mut Rng, out: &mut String| {
+            for _ in 0..r.below(3) { out.push(if r.below(2) == 0 { ' ' } else { '\n' }); }
+        };
+        match v {
+            Value::Object(o) => {
+                let mut keys: Vec<&String> = o.keys().collect();
+                for i in (1..keys.len()).rev() { keys.swap(i, r.below(i as u64 + 1) as usize); }
+                out.push('{');
+                for (i, k) in keys.iter().enumerate() {
+                    if i > 0 { out.push(','); }
+                    ws(r, out);
+                    out.push_str(&serde_json::to_string(k).unwrap());
+                    ws(r, out);
+                    out.push(':');
+                    ws(r, out);
+                    emit_shuffled(&o[k.as_str()], r, out);
+                }
+                ws(r, out);
+                out.push('}');
+            }
+            Value::Array(xs) => {
+                out.push('[');
+                for (i, x) in xs.iter().enumerate() {
+                    if i > 0 { out.push(','); ws(r, out); }
+                    emit_shuffled(x, r, out);
+                }
+                out.push(']');
+            }
+            other => out.push_str(&other.to_string()),
+        }
+    }
+
+    /// No-op control: same manifest re-serialised with shuffled key order
+    /// and random whitespace, parsed back.
+    pub fn noop_control(m: &RunManifest, r: &mut Rng) -> RunManifest {
+        let mut s = String::new();
+        emit_shuffled(&serde_json::to_value(m).unwrap(), r, &mut s);
+        serde_json::from_str(&s).expect("shuffled text parses")
+    }
+
+    /// Run the whole study; returns the `mutation` results object.
+    pub fn run(seed: u64, per_field: usize, controls: usize) -> Value {
+        let mut r = Rng(seed);
+        let base = reference(&mut r);
+        let base_hash = canonical_sha256_hex(&base);
+        let mut per = serde_json::Map::new();
+        let (mut tot, mut flagged) = (0usize, 0usize);
+        for f in PINNED_FIELDS {
+            let (mut pin, mut hash_changed, mut named_only) = (0, 0, 0);
+            for _ in 0..per_field {
+                let x = mutate_field(&base, f, &mut r);
+                if let Verdict::DivergedPinned { divergences } = verify(&base, &x) {
+                    pin += 1;
+                    if divergences.len() == 1 && divergence_field(&divergences[0]) == f { named_only += 1; }
+                }
+                if canonical_sha256_hex(&x) != base_hash { hash_changed += 1; }
+            }
+            tot += per_field;
+            flagged += pin;
+            let n = per_field as f64;
+            per.insert(f.into(), json!({
+                "n": per_field, "pin_flag_rate": pin as f64 / n,
+                "exact_single_field_rate": named_only as f64 / n,
+                "hash_change_rate": hash_changed as f64 / n,
+            }));
+        }
+        let (mut c_match, mut c_hash) = (0, 0);
+        for _ in 0..controls {
+            let x = noop_control(&base, &mut r);
+            if verify(&base, &x) == Verdict::Matched { c_match += 1; }
+            if canonical_sha256_hex(&x) == base_hash { c_hash += 1; }
+        }
+        let blankable: Vec<&str> = PINNED_FIELDS.iter().copied().filter(|f| *f != "sampling").collect();
+        let mut unv = 0;
+        for i in 0..controls {
+            let f = blankable[i % blankable.len()];
+            let x = blank_field(&base, f, &mut r);
+            if matches!(verify(&base, &x), Verdict::Unverified { .. }) { unv += 1; }
+        }
+        let c = controls.max(1) as f64;
+        json!({
+            "reference_sha256": base_hash,
+            "per_field": per,
+            "overall": {
+                "n": tot,
+                "pin_flag_rate": flagged as f64 / tot.max(1) as f64,
+            },
+            "controls": {
+                "n": controls,
+                "matched_rate": c_match as f64 / c,
+                "hash_identical_rate": c_hash as f64 / c,
+                "false_flag_rate": 1.0 - c_match as f64 / c,
+            },
+            "blanking": { "n": controls, "unverified_rate": unv as f64 / c },
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -498,3 +711,44 @@ mod tests {
         assert_eq!(v, v2);
     }
 }
+
+#[cfg(test)]
+mod mutate_tests {
+    use super::mutate::*;
+    use super::*;
+
+    #[test]
+    fn study_is_deterministic_and_clean() {
+        let a = run(7, 20, 14);
+        assert_eq!(a, run(7, 20, 14));
+        assert_eq!(a["overall"]["pin_flag_rate"], 1.0);
+        assert_eq!(a["controls"]["false_flag_rate"], 0.0);
+        assert_eq!(a["blanking"]["unverified_rate"], 1.0);
+    }
+
+    #[test]
+    fn noop_control_keeps_hash() {
+        let mut r = Rng(3);
+        let m = reference(&mut r);
+        let x = noop_control(&m, &mut r);
+        assert_eq!(canonical_sha256_hex(&m), canonical_sha256_hex(&x));
+        assert_eq!(verify(&m, &x), Verdict::Matched);
+    }
+
+    #[test]
+    fn mutation_changes_named_field() {
+        let mut r = Rng(5);
+        let m = reference(&mut r);
+        for f in PINNED_FIELDS {
+            let x = mutate_field(&m, f, &mut r);
+            match verify(&m, &x) {
+                Verdict::DivergedPinned { divergences } => {
+                    assert_eq!(divergences.len(), 1);
+                    assert_eq!(divergence_field(&divergences[0]), f);
+                }
+                v => panic!("{f}: {v:?}"),
+            }
+        }
+    }
+}
+

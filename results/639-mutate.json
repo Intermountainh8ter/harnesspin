@@ -1,0 +1,78 @@
+{
+  "mutation": {
+    "blanking": {
+      "n": 200,
+      "unverified_rate": 1.0
+    },
+    "controls": {
+      "false_flag_rate": 0.0,
+      "hash_identical_rate": 1.0,
+      "matched_rate": 1.0,
+      "n": 200
+    },
+    "overall": {
+      "n": 1400,
+      "pin_flag_rate": 1.0
+    },
+    "per_field": {
+      "chat_template": {
+        "exact_single_field_rate": 1.0,
+        "hash_change_rate": 1.0,
+        "n": 200,
+        "pin_flag_rate": 1.0
+      },
+      "few_shot": {
+        "exact_single_field_rate": 1.0,
+        "hash_change_rate": 1.0,
+        "n": 200,
+        "pin_flag_rate": 1.0
+      },
+      "harness": {
+        "exact_single_field_rate": 1.0,
+        "hash_change_rate": 1.0,
+        "n": 200,
+        "pin_flag_rate": 1.0
+      },
+      "metrics": {
+        "exact_single_field_rate": 1.0,
+        "hash_change_rate": 1.0,
+        "n": 200,
+        "pin_flag_rate": 1.0
+      },
+      "model": {
+        "exact_single_field_rate": 1.0,
+        "hash_change_rate": 1.0,
+        "n": 200,
+        "pin_flag_rate": 1.0
+      },
+      "sampling": {
+        "exact_single_field_rate": 1.0,
+        "hash_change_rate": 1.0,
+        "n": 200,
+        "pin_flag_rate": 1.0
+      },
+      "task": {
+        "exact_single_field_rate": 1.0,
+        "hash_change_rate": 1.0,
+        "n": 200,
+        "pin_flag_rate": 1.0
+      }
+    },
+    "reference_sha256": "ba6b3d8321ec5cc57f550e44e87e28038b53d3f570789432bc5fbc84c9c22b7a"
+  },
+  "provenance": {
+    "command": "harnesspin mutate --seed 7 --per-field 200 --controls 200 --out results/639-mutate.json",
+    "data_sources": [
+      {
+        "license": "MIT",
+        "url": "synthetic: seeded generator in-repo"
+      }
+    ],
+    "hardware": "cpu",
+    "seeds": [
+      7
+    ],
+    "started_at": "2026-11-27T06:42:37Z",
+    "wall_s": 0.021253802
+  }
+}

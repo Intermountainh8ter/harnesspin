@@ -35,7 +35,8 @@ tell a replicated row from a lookalike.
 - `verify(declared, observed) -> Verdict { Matched | DivergedPinned |
   Unverified }` — the pre-reg comparability gate (§4), with the §7
   degenerate-baseline guard applied first.
-- CLI: `canon`, `compare`, `verify`, `version`. Exit codes 0/1/2 for
+- `mutate` — model-free seeded single-field mutation study (`results/639-mutate.json`): across 1400 mutations (200 per pinned field) the pin flag rate is 1.0, the no-op control false-flag rate is 0.0, and the blanking unverified rate is 1.0.
+- CLI: `canon`, `compare`, `verify`, `mutate`, `version`. Exit codes 0/1/2 for
   Matched/Diverged/Unverified so a CI job can gate on them.
 
 ## What is openly deferred (see §10)
