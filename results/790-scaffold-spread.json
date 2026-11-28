@@ -1,0 +1,30 @@
+{
+  "provenance": {
+    "command": "harnesspin scaffold-spread --seed 7 --tasks 200 --trials 8 --models 6 --versions 10 --out results/790-scaffold-spread.json",
+    "data_sources": [
+      {
+        "license": "MIT",
+        "url": "synthetic: seeded generator in-repo"
+      }
+    ],
+    "hardware": "cpu",
+    "seeds": [
+      7
+    ],
+    "started_at": "2026-11-28T02:55:15Z",
+    "wall_s": 0.032921019
+  },
+  "scaffold_spread": {
+    "global_offset": 0.05,
+    "mean_score_std_across_versions": 0.028278662882950948,
+    "models": 6,
+    "ranking_flip_fraction_pinned": 0.007166666666666667,
+    "ranking_flip_fraction_unpinned": 0.10716666666666651,
+    "replicates": 200,
+    "skill_step": 0.03,
+    "task_perturbation": 0.15,
+    "tasks": 200,
+    "trials": 8,
+    "versions": 10
+  }
+}

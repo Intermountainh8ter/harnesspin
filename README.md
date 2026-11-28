@@ -39,7 +39,8 @@ tell a replicated row from a lookalike.
 - `pin-audit` — model-free seeded floating-reference audit (`results/755-pin-audit.json`): across 1000 identical-pin pairs (200 per class) carrying `main`, `latest`, `HEAD`, `unknown` or non-hex strings, the floating Matched rate is 1.0 and the hex-pin control Matched rate is 1.0, so Matched does not distinguish pinned from floating rows.
 - `pass-k-baseline` — model-free seeded pass^k baseline (`results/759-pass-k-baseline.json`): with 200 tasks and 8 trials at seed 7, the coin-flip responder first falls below the 0.05 floor at k=4 (pass^4 0.049142857142857085), not the pre-registered k=5, though inside the 4..6 range; the always-fail responder is below the floor at k=1.
 - `floor-sweep` — model-free seeded vacuous-task floor sweep (`results/767-floor-sweep.json`): with 400 tasks and 16 trials at seed 7, a do-nothing responder's pass^k equals the vacuous share at every k, and the agent's headline pass^k first comes within 0.05 of the 0.38-share floor at k=15; at share 0.06 it never comes within 0.05 by k=16.
-- CLI: `canon`, `compare`, `verify`, `mutate`, `pin-audit`, `pass-k-baseline`, `floor-sweep`, `version`. Exit codes 0/1/2 for
+- `scaffold-spread` — model-free seeded scaffold-version spread (`results/790-scaffold-spread.json`): with 200 tasks, 8 trials, 6 models and 10 scaffold versions at seed 7, the pairwise ranking-flip fraction is 0.10716666666666651 when each model is scored under a random scaffold version and 0.007166666666666667 under one pinned version.
+- CLI: `canon`, `compare`, `verify`, `mutate`, `pin-audit`, `pass-k-baseline`, `floor-sweep`, `scaffold-spread`, `version`. Exit codes 0/1/2 for
   Matched/Diverged/Unverified so a CI job can gate on them.
 
 ## What is openly deferred (see §10)

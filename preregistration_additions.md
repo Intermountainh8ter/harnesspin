@@ -31,3 +31,11 @@ Hypothesis: with 400 synthetic tasks, 16 trials per task, seed 7, vacuous-task s
 Metric: /floor_sweep/0/k_at_floor (arm 0 is the 0.38 share). Expected: equals 15 (range 12..16).
 
 Falsifier: k_at_floor for the 0.38 arm outside 12..16, or the do-nothing pass^k differing from the vacuous share at any k, or the 0.06 arm reaching the margin at a smaller k than the 0.38 arm.
+
+## 2026-11-28T02:55:02Z scaffold-spread proposal:4ad2e61ef8a8d9f5abee405ebde85d943a54c9f7426ef9fa920d512cb28161df
+
+Hypothesis: on a seeded synthetic task set (200 tasks, 8 trials, 6 models with a 0.03 skill step, 10 scaffold versions, each version adding a global offset drawn from U(-0.05, 0.05) and a per-task perturbation drawn from U(-0.15, 0.15) to success probability), the pairwise ranking-flip fraction when each model is scored under a randomly drawn scaffold version (unpinned) exceeds 0.10, while under one pinned version for all models it stays below 0.05. Flip fraction is averaged over 200 seeded replicates; a tied score pair counts as half a flip.
+
+Metric: /scaffold_spread/ranking_flip_fraction_unpinned. Expected: at least 0.10 (range 0.10..0.5), above the pinned fraction.
+
+Falsifier: ranking_flip_fraction_unpinned below 0.05, or not larger than ranking_flip_fraction_pinned.
