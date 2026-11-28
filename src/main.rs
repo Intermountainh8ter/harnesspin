@@ -100,6 +100,15 @@ enum Cmd {
         #[arg(long)]
         out: PathBuf,
     },
+    /// Seeded harness-version shift detection power study; writes a results JSON.
+    ShiftDetect {
+        #[arg(long, default_value_t = 7)]
+        seed: u64,
+        #[arg(long, default_value_t = 400)]
+        replicates: usize,
+        #[arg(long)]
+        out: PathBuf,
+    },
     /// Print the version banner and exit.
     Version,
 }
@@ -285,6 +294,32 @@ fn main() -> anyhow::Result<()> {
                 "started_at": format!("{yr:04}-{mon:02}-{day:02}T{h:02}:{m:02}:{s:02}Z"),
                 "seeds": [seed],
                 "command": format!("harnesspin scaffold-spread --seed {seed} --tasks {tasks} --trials {trials} --models {models} --versions {versions} --out {}", out.display()),
+                "hardware": "cpu",
+                "wall_s": t.elapsed().as_secs_f64(),
+                "data_sources": [{"url": "synthetic: seeded generator in-repo", "license": "MIT"}],
+            });
+            std::fs::write(&out, serde_json::to_string_pretty(&res)? + "\n")?;
+        }
+        Cmd::ShiftDetect { seed, replicates, out } => {
+            let t = std::time::Instant::now();
+            let started = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_secs();
+            let mut res = harnesspin::shift_detect::run(seed, replicates);
+            let (d, h, m, s) = (started / 86400, started % 86400 / 3600, started % 3600 / 60, started % 60);
+            let z = d as i64 + 719468;
+            let era = z.div_euclid(146097);
+            let doe = z.rem_euclid(146097);
+            let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+            let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+            let mp = (5 * doy + 2) / 153;
+            let day = doy - (153 * mp + 2) / 5 + 1;
+            let mon = if mp < 10 { mp + 3 } else { mp - 9 };
+            let yr = yoe + era * 400 + (mon <= 2) as i64;
+            res["provenance"] = serde_json::json!({
+                "started_at": format!("{yr:04}-{mon:02}-{day:02}T{h:02}:{m:02}:{s:02}Z"),
+                "seeds": [seed],
+                "command": format!("harnesspin shift-detect --seed {seed} --replicates {replicates} --out {}", out.display()),
                 "hardware": "cpu",
                 "wall_s": t.elapsed().as_secs_f64(),
                 "data_sources": [{"url": "synthetic: seeded generator in-repo", "license": "MIT"}],

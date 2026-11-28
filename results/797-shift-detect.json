@@ -1,0 +1,63 @@
+{
+  "detection": {
+    "alpha": 0.05,
+    "curves": [
+      {
+        "power": [
+          0.115,
+          0.1075,
+          0.2225,
+          0.37,
+          0.585,
+          0.875,
+          0.995,
+          1.0
+        ],
+        "shift": 0.05
+      },
+      {
+        "power": [
+          0.1525,
+          0.325,
+          0.61,
+          0.86,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "shift": 0.1
+      }
+    ],
+    "grid": [
+      50,
+      100,
+      200,
+      400,
+      800,
+      1600,
+      3200,
+      6400
+    ],
+    "min_tasks_shift_0_05": 1600,
+    "min_tasks_shift_0_10": 400,
+    "power_target": 0.8,
+    "replicates": 400,
+    "task_perturbation": 0.15
+  },
+  "provenance": {
+    "command": "harnesspin shift-detect --seed 7 --replicates 400 --out results/797-shift-detect.json",
+    "data_sources": [
+      {
+        "license": "MIT",
+        "url": "synthetic: seeded generator in-repo"
+      }
+    ],
+    "hardware": "cpu",
+    "seeds": [
+      7
+    ],
+    "started_at": "2026-11-28T03:25:30Z",
+    "wall_s": 0.166060812
+  }
+}

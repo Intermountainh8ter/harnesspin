@@ -308,6 +308,7 @@ pub const PINNED_FIELDS: [&str; 7] = [
 pub mod pass_k;
 pub mod floor_sweep;
 pub mod scaffold_spread;
+pub mod shift_detect;
 
 pub mod mutate {
     use super::*;

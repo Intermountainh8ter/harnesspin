@@ -39,3 +39,11 @@ Hypothesis: on a seeded synthetic task set (200 tasks, 8 trials, 6 models with a
 Metric: /scaffold_spread/ranking_flip_fraction_unpinned. Expected: at least 0.10 (range 0.10..0.5), above the pinned fraction.
 
 Falsifier: ranking_flip_fraction_unpinned below 0.05, or not larger than ranking_flip_fraction_pinned.
+
+## 2026-11-28T03:25:26Z shift-detect proposal:7fdd72a4f0cdb092c31d7cbece6076fa8e31799305dc0d5ccd5ff2ae213099ff
+
+Hypothesis: on a seeded synthetic fixture (base per-task success drawn from U(0.2, 0.9), one trial per task per harness, a global harness shift of 0.05 plus a per-task perturbation drawn from U(-0.15, 0.15), 400 seeded replicates per fixture size, paired two-sided z-test on the success difference at alpha 0.05), the smallest fixture size on the grid 50, 100, 200, 400, 800, 1600, 3200, 6400 reaching 0.80 detection power at shift 0.05 is at least 1600 tasks, and the minimum at shift 0.10 is at most half of it.
+
+Metric: /detection/min_tasks_shift_0_05. Expected: at least 1600 (range 1600..6400).
+
+Falsifier: min_tasks_shift_0_05 below 1600 on the grid, or the shift 0.10 minimum above half the shift 0.05 minimum.
