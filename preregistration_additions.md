@@ -23,3 +23,11 @@ Hypothesis: with 200 synthetic tasks and n=8 trials per task at seed 7, a coin-f
 Metric: /pass_k_baseline/coinflip/k_below_floor. Expected: equals 5 (range 4..6).
 
 Falsifier: coinflip k_below_floor outside 4..6, or the estimated pass^k curve not decreasing monotonically in k.
+
+## 2026-11-28T01:24:59Z floor-sweep proposal:812610e44c614c8a92f7d675ac796cba41ddaa6c1e9a11d3baf7c1da5aa72ef1
+
+Hypothesis: with 400 synthetic tasks, 16 trials per task, seed 7, vacuous-task share 0.38 and non-vacuous per-task agent success drawn uniformly from 0.2 to 1.0, the do-nothing responder's pass^k equals the vacuous share at every k, and the agent's headline pass^k first comes within 0.05 of that floor at k=15 (range 12..16). At vacuous share 0.06 the agent stays more than 0.05 above the floor until a larger k than at 0.38, or never within 16.
+
+Metric: /floor_sweep/0/k_at_floor (arm 0 is the 0.38 share). Expected: equals 15 (range 12..16).
+
+Falsifier: k_at_floor for the 0.38 arm outside 12..16, or the do-nothing pass^k differing from the vacuous share at any k, or the 0.06 arm reaching the margin at a smaller k than the 0.38 arm.

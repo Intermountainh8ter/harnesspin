@@ -306,6 +306,7 @@ pub const PINNED_FIELDS: [&str; 7] = [
 
 /// Seeded single-field mutation study (model-free).
 pub mod pass_k;
+pub mod floor_sweep;
 
 pub mod mutate {
     use super::*;
