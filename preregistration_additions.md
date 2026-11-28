@@ -47,3 +47,11 @@ Hypothesis: on a seeded synthetic fixture (base per-task success drawn from U(0.
 Metric: /detection/min_tasks_shift_0_05. Expected: at least 1600 (range 1600..6400).
 
 Falsifier: min_tasks_shift_0_05 below 1600 on the grid, or the shift 0.10 minimum above half the shift 0.05 minimum.
+
+## 2026-11-28T04:20:39Z canary-power proposal:0e546e6cbb1f0460922b8ec61365295764218293034759d0649cf81299ad74cf
+
+Hypothesis: on a seeded synthetic fixture (baseline per-task success p drawn from U(0.6, 0.95), regressed p = max(0, p - d) with d on the grid 0.02..0.20 step 0.02, 8 trials per task per release, per-task pass^k estimated by the unbiased combinatorial estimator C(c,k)/C(8,k), paired two-sided z-test at alpha 0.05, 400 seeded replicates per cell), at k=3 with 100 canary tasks the smallest per-trial drop reaching 0.80 power is at least 0.10, and the minimum detectable drop at k=5 is no larger than at k=3 for the same task count.
+
+Metric: /power/min_detectable_drop_k3_n100. Expected: at least 0.10 (range 0.10..0.20, grid value).
+
+Falsifier: min_detectable_drop_k3_n100 below 0.10 on the grid, or the k=5 minimum at 100 tasks above the k=3 minimum.

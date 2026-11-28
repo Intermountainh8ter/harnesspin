@@ -309,6 +309,7 @@ pub mod pass_k;
 pub mod floor_sweep;
 pub mod scaffold_spread;
 pub mod shift_detect;
+pub mod canary_power;
 
 pub mod mutate {
     use super::*;
