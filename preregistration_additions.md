@@ -15,3 +15,11 @@ Hypothesis: verify only rejects blank pins. Across 200 seeded manifest pairs per
 Metric: /pin_audit/overall/floating_matched_rate. Expected: equals 1.0; hex-format control matched rate equals 1.0.
 
 Falsifier: any identical-floating-reference pair yields Unverified or DivergedPinned, i.e. floating_matched_rate below 1.0.
+
+## 2026-11-28T00:53:01Z pass-k-baseline proposal:21d3bff7f8a5693d76f0ba79032248af3b51e6c43932f6f6a5d36fcc93bd7657
+
+Hypothesis: with 200 synthetic tasks and n=8 trials per task at seed 7, a coin-flip responder (per-trial success 0.5) has estimated pass^k (C(c,k)/C(n,k), mean over tasks) below the 0.05 floor first at k=5; the always-fail responder is below the floor at k=1.
+
+Metric: /pass_k_baseline/coinflip/k_below_floor. Expected: equals 5 (range 4..6).
+
+Falsifier: coinflip k_below_floor outside 4..6, or the estimated pass^k curve not decreasing monotonically in k.

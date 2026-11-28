@@ -1,0 +1,88 @@
+{
+  "pass_k_baseline": {
+    "always_fail": {
+      "k_below_floor": 1,
+      "monotone_non_increasing": true,
+      "pass_hat_k": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rate": 0.0
+    },
+    "coinflip": {
+      "k_below_floor": 4,
+      "monotone_non_increasing": true,
+      "pass_hat_k": [
+        0.478125,
+        0.22767857142857115,
+        0.10732142857142854,
+        0.049142857142857085,
+        0.021339285714285706,
+        0.008392857142857148,
+        0.0025,
+        0.0
+      ],
+      "rate": 0.5
+    },
+    "fixed_0_7": {
+      "k_below_floor": null,
+      "monotone_non_increasing": true,
+      "pass_hat_k": [
+        0.704375,
+        0.49732142857142914,
+        0.35133928571428547,
+        0.24778571428571428,
+        0.17419642857142859,
+        0.12214285714285708,
+        0.085625,
+        0.06
+      ],
+      "rate": 0.7
+    },
+    "fixed_0_9": {
+      "k_below_floor": null,
+      "monotone_non_increasing": true,
+      "pass_hat_k": [
+        0.905625,
+        0.8198214285714287,
+        0.7417857142857146,
+        0.6708571428571424,
+        0.6065178571428576,
+        0.5483928571428577,
+        0.49625,
+        0.45
+      ],
+      "rate": 0.9
+    },
+    "floor": 0.05,
+    "responders": [
+      "always_fail",
+      "coinflip",
+      "fixed_0_7",
+      "fixed_0_9"
+    ],
+    "tasks": 200,
+    "trials": 8
+  },
+  "provenance": {
+    "command": "harnesspin pass-k-baseline --seed 7 --tasks 200 --trials 8 --floor 0.05 --out results/759-pass-k-baseline.json",
+    "data_sources": [
+      {
+        "license": "MIT",
+        "url": "synthetic: seeded generator in-repo"
+      }
+    ],
+    "hardware": "cpu",
+    "seeds": [
+      7
+    ],
+    "started_at": "2026-11-28T00:53:05Z",
+    "wall_s": 0.00025706
+  }
+}
