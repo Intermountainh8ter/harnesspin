@@ -493,6 +493,126 @@ pub mod mutate {
     }
 }
 
+/// Floating-reference audit (model-free): does `verify` accept identical
+/// non-hex pins as `Matched`?
+pub mod pin_audit {
+    use super::mutate::{reference, Rng};
+    use super::*;
+    use serde_json::{json, Value};
+
+    pub const CLASSES: [&str; 5] = [
+        "harness.commit_sha",
+        "model.revision",
+        "chat_template_sha256_hex",
+        "task.config_sha256_hex",
+        "few_shot.examples_sha256_hex",
+    ];
+    const FLOATING: [&str; 4] = ["main", "latest", "HEAD", "unknown"];
+
+    fn floating_value(r: &mut Rng) -> String {
+        let i = r.below(5) as usize;
+        if i < FLOATING.len() {
+            FLOATING[i].to_string()
+        } else {
+            format!("zz-{:08x}-not-hex", r.next() as u32)
+        }
+    }
+
+    fn set(m: &mut RunManifest, class: &str, v: String) {
+        match class {
+            "harness.commit_sha" => m.harness.commit_sha = v,
+            "model.revision" => m.model.revision = v,
+            "chat_template_sha256_hex" => m.chat_template_sha256_hex = v,
+            "task.config_sha256_hex" => m.task.config_sha256_hex = v,
+            "few_shot.examples_sha256_hex" => m.few_shot.examples_sha256_hex = v,
+            _ => unreachable!("unknown class"),
+        }
+    }
+
+    fn is_hex_of_len(s: &str, n: usize) -> bool {
+        s.len() == n && s.bytes().all(|b| b.is_ascii_hexdigit())
+    }
+
+    pub fn run(seed: u64, per_class: usize) -> Value {
+        let mut r = Rng(seed);
+        let mut per = serde_json::Map::new();
+        let (mut tot, mut fm, mut hm) = (0usize, 0usize, 0usize);
+        for class in CLASSES {
+            let (mut f_match, mut h_match, mut h_valid) = (0usize, 0usize, 0usize);
+            for _ in 0..per_class {
+                let base = reference(&mut r);
+                let mut a = base.clone();
+                let v = floating_value(&mut r);
+                set(&mut a, class, v);
+                if verify(&a, &a.clone()) == Verdict::Matched {
+                    f_match += 1;
+                }
+                // control: the reference carries a real hex pin
+                let n = if class == "harness.commit_sha" { 40 } else if class == "model.revision" { 12 } else { 64 };
+                let pin = match class {
+                    "harness.commit_sha" => &base.harness.commit_sha,
+                    "model.revision" => &base.model.revision,
+                    "chat_template_sha256_hex" => &base.chat_template_sha256_hex,
+                    "task.config_sha256_hex" => &base.task.config_sha256_hex,
+                    _ => &base.few_shot.examples_sha256_hex,
+                };
+                if is_hex_of_len(pin, n) {
+                    h_valid += 1;
+                }
+                if verify(&base, &base.clone()) == Verdict::Matched {
+                    h_match += 1;
+                }
+            }
+            tot += per_class;
+            fm += f_match;
+            hm += h_match;
+            let n = per_class.max(1) as f64;
+            per.insert(class.into(), json!({
+                "n": per_class,
+                "floating_matched_rate": f_match as f64 / n,
+                "hex_control_matched_rate": h_match as f64 / n,
+                "hex_control_valid_format_rate": h_valid as f64 / n,
+            }));
+        }
+        let t = tot.max(1) as f64;
+        json!({
+            "per_class": per,
+            "overall": {
+                "n": tot,
+                "floating_matched_rate": fm as f64 / t,
+                "hex_control_matched_rate": hm as f64 / t,
+            },
+        })
+    }
+}
+
+#[cfg(test)]
+mod pin_audit_tests {
+    use super::*;
+
+    #[test]
+    fn audit_is_deterministic_and_floating_pins_match() {
+        let a = pin_audit::run(7, 10);
+        assert_eq!(a, pin_audit::run(7, 10));
+        assert_eq!(a["overall"]["n"], 50);
+        assert_eq!(a["overall"]["floating_matched_rate"], 1.0);
+        assert_eq!(a["overall"]["hex_control_matched_rate"], 1.0);
+    }
+
+    #[test]
+    fn floating_reference_is_not_degenerate() {
+        let mut r = pin_audit_rng();
+        let mut m = super::mutate::reference(&mut r);
+        m.harness.commit_sha = "main".into();
+        assert!(is_degenerate(&m).is_none());
+        assert_eq!(verify(&m, &m.clone()), Verdict::Matched);
+    }
+
+    fn pin_audit_rng() -> super::mutate::Rng {
+        super::mutate::Rng(11)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

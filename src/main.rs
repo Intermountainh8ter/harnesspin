@@ -50,6 +50,15 @@ enum Cmd {
         #[arg(long)]
         out: PathBuf,
     },
+    /// Seeded floating-reference audit; writes a results JSON.
+    PinAudit {
+        #[arg(long, default_value_t = 7)]
+        seed: u64,
+        #[arg(long, default_value_t = 200)]
+        per_class: usize,
+        #[arg(long)]
+        out: PathBuf,
+    },
     /// Print the version banner and exit.
     Version,
 }
@@ -120,6 +129,35 @@ fn main() -> anyhow::Result<()> {
                     "started_at": format!("{yr:04}-{mon:02}-{day:02}T{h:02}:{m:02}:{s:02}Z"),
                     "seeds": [seed],
                     "command": format!("harnesspin mutate --seed {seed} --per-field {per_field} --controls {controls} --out {}", out.display()),
+                    "hardware": "cpu",
+                    "wall_s": t.elapsed().as_secs_f64(),
+                    "data_sources": [{"url": "synthetic: seeded generator in-repo", "license": "MIT"}],
+                }
+            });
+            std::fs::write(&out, serde_json::to_string_pretty(&res)? + "\n")?;
+        }
+        Cmd::PinAudit { seed, per_class, out } => {
+            let t = std::time::Instant::now();
+            let started = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_secs();
+            let res = harnesspin::pin_audit::run(seed, per_class);
+            let (d, h, m, s) = (started / 86400, started % 86400 / 3600, started % 3600 / 60, started % 60);
+            let z = d as i64 + 719468;
+            let era = z.div_euclid(146097);
+            let doe = z.rem_euclid(146097);
+            let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+            let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+            let mp = (5 * doy + 2) / 153;
+            let day = doy - (153 * mp + 2) / 5 + 1;
+            let mon = if mp < 10 { mp + 3 } else { mp - 9 };
+            let yr = yoe + era * 400 + (mon <= 2) as i64;
+            let res = serde_json::json!({
+                "pin_audit": res,
+                "provenance": {
+                    "started_at": format!("{yr:04}-{mon:02}-{day:02}T{h:02}:{m:02}:{s:02}Z"),
+                    "seeds": [seed],
+                    "command": format!("harnesspin pin-audit --seed {seed} --per-class {per_class} --out {}", out.display()),
                     "hardware": "cpu",
                     "wall_s": t.elapsed().as_secs_f64(),
                     "data_sources": [{"url": "synthetic: seeded generator in-repo", "license": "MIT"}],

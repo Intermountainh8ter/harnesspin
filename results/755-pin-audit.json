@@ -1,0 +1,56 @@
+{
+  "pin_audit": {
+    "overall": {
+      "floating_matched_rate": 1.0,
+      "hex_control_matched_rate": 1.0,
+      "n": 1000
+    },
+    "per_class": {
+      "chat_template_sha256_hex": {
+        "floating_matched_rate": 1.0,
+        "hex_control_matched_rate": 1.0,
+        "hex_control_valid_format_rate": 1.0,
+        "n": 200
+      },
+      "few_shot.examples_sha256_hex": {
+        "floating_matched_rate": 1.0,
+        "hex_control_matched_rate": 1.0,
+        "hex_control_valid_format_rate": 1.0,
+        "n": 200
+      },
+      "harness.commit_sha": {
+        "floating_matched_rate": 1.0,
+        "hex_control_matched_rate": 1.0,
+        "hex_control_valid_format_rate": 1.0,
+        "n": 200
+      },
+      "model.revision": {
+        "floating_matched_rate": 1.0,
+        "hex_control_matched_rate": 1.0,
+        "hex_control_valid_format_rate": 1.0,
+        "n": 200
+      },
+      "task.config_sha256_hex": {
+        "floating_matched_rate": 1.0,
+        "hex_control_matched_rate": 1.0,
+        "hex_control_valid_format_rate": 1.0,
+        "n": 200
+      }
+    }
+  },
+  "provenance": {
+    "command": "harnesspin pin-audit --seed 7 --per-class 200 --out results/755-pin-audit.json",
+    "data_sources": [
+      {
+        "license": "MIT",
+        "url": "synthetic: seeded generator in-repo"
+      }
+    ],
+    "hardware": "cpu",
+    "seeds": [
+      7
+    ],
+    "started_at": "2026-11-28T00:35:55Z",
+    "wall_s": 0.007787733
+  }
+}
